@@ -15,11 +15,11 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Relief Connect API")
-                        .description("API cho hệ thống cầu cứu & gây quỹ vùng lũ - version 1 (Monolithic)")
-                        .version("v1.0")
+                        .description("API cho hệ thống cầu cứu & gây quỹ vùng lũ - version 2")
+                        .version("v2.0")
                         .license(new License().name("Apache 2.0").url("http://springdoc.org")))
                 .externalDocs(new ExternalDocumentation()
                         .description("Tài liệu chi tiết dự án")
-                        .url("https://github.com/example/reliefconnect"));
+                        .url("https://github.com/LouisVie61/ReliefConnectForum"));
     }
 }
