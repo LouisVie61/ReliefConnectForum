@@ -1,0 +1,22 @@
+# yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/reliefV1
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+server:
+  port: 8080
+  error:
+    include-message: always
