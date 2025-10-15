@@ -1,7 +1,7 @@
 # yaml
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/reliefV1
+    url: jdbc:postgresql://localhost:5432/reliefV2
     username: postgres
     password: 123456
     driver-class-name: org.postgresql.Driver
