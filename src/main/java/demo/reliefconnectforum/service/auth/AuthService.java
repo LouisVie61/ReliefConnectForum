@@ -1,4 +1,4 @@
-package demo.reliefconnectforum.service;
+package demo.reliefconnectforum.service.auth;
 
 public interface AuthService {
 }

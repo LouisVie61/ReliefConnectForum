@@ -8,7 +8,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "donations", indexes = {
-        @Index(name = "idx_donations_user", columnList = "donor_id"),
+        @Index(name = "idx_donations_user", columnList = "user_id"),
         @Index(name = "idx_donations_post", columnList = "post_id")
 })
 public class Donation {
@@ -21,7 +21,7 @@ public class Donation {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
-    private User donor;
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "post_id", nullable = false)
@@ -34,7 +34,10 @@ public class Donation {
     private String currency;
 
     @Column(name = "note", length = 500)
-    private String note;
+    private String message;
+
+    @Column(name = "location", length = 100)
+    private String location;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -49,8 +52,8 @@ public class Donation {
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
-    public User getDonor() { return donor; }
-    public void setDonor(User donor) { this.donor = donor; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
 
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
@@ -58,12 +61,19 @@ public class Donation {
     public String getCurrency() { return currency; }
     public void setCurrency(String currency) { this.currency = currency; }
 
-    public String getNote() { return note; }
-    public void setNote(String note) { this.note = note; }
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public Post getPost() { return post; }
     public void setPost(Post post) { this.post = post; }
+
+    public String getLocation() {
+        return location;
+    }
+    public void setLocation(String location) {
+        this.location = location;
+    }
 }
