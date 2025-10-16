@@ -53,7 +53,7 @@ public class User {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private List<Post> posts;
 
-    @OneToMany(mappedBy = "donor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private List<Donation> donations;
 

@@ -28,21 +28,20 @@ public class Post {
     private User author;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "post_id", nullable = false)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private List<Donation> donations;
 
-    @Column(nullable = false, length = 140)
+    @Column(name = "title", nullable = false, length = 140)
     private String title;
 
-    @Column(nullable = false, length = 4000)
-    private String description;
+    @Column(name = "content", nullable = false, length = 4000)
+    private String content;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "post_type", nullable = false, length = 20)
     private PostType postType;
 
-    @Column(length = 255)
+    @Column(name = "location", length = 255)
     private String location;
 
     @Column(name = "contact_name", length = 120)
@@ -86,11 +85,11 @@ public class Post {
         this.title = title;
     }
 
-    public String getDescription() {
-        return description;
+    public String getContent() {
+        return content;
     }
-    public void setDescription(String description) {
-        this.description = description;
+    public void setContent(String content) {
+        this.content = content;
     }
 
     public PostType getPostType() {
