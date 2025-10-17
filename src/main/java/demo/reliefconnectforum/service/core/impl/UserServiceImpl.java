@@ -8,6 +8,7 @@ import demo.reliefconnectforum.service.core.UserService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.UUID;
 
@@ -16,6 +17,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -27,7 +31,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse getUserById(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        return converToResponse(user);
+        return convertToResponse(user);
     }
 
     @Override
@@ -35,12 +39,13 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFullName(request.getFullName());
         user.setPhone(request.getPhoneNumber());
         user.setAddress(request.getAddress());
         user.setRole(request.getRole());
         User savedUser = userRepository.save(user);
-        return converToResponse(savedUser);
+        return convertToResponse(savedUser);
     }
 
     @Override
@@ -70,10 +75,10 @@ public class UserServiceImpl implements UserService {
         }
 
         User updatedUser = userRepository.save(user);
-        return converToResponse(updatedUser);
+        return convertToResponse(updatedUser);
     }
 
-    private UserResponse converToResponse(User user) {
+    private UserResponse convertToResponse(User user) {
         UserResponse response = new UserResponse();
         response.setId(user.getId());
         response.setUsername(user.getUsername());

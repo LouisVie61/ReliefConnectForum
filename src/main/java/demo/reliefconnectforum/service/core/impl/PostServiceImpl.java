@@ -1,5 +1,6 @@
 package demo.reliefconnectforum.service.core.impl;
 
+import demo.reliefconnectforum.Enum.PostType;
 import demo.reliefconnectforum.dto.request.PostRequest;
 import demo.reliefconnectforum.dto.response.PostResponse;
 import demo.reliefconnectforum.entity.Post;
@@ -47,6 +48,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public PostResponse create(PostRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
@@ -55,6 +57,11 @@ public class PostServiceImpl implements PostService {
         post.setTitle(request.getTitle());
         post.setContent(request.getContent());
         post.setAuthor(user);
+        post.setPostType(request.getPostType() != null ? request.getPostType() : PostType.RESCUE);
+        post.setLocation(request.getLocation());
+        post.setContactName(request.getContactName());
+        post.setContactPhone(request.getContactPhone());
+        post.setTargetAmount(request.getTargetAmount());
         post.setCreatedAt(LocalDateTime.now());
 
         Post savedPost = postRepository.save(post);
@@ -62,17 +69,45 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public PostResponse update(UUID id, PostRequest request) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found with id: " + id));
 
-        post.setTitle(request.getTitle());
-        post.setContent(request.getContent());
+        if (request.getTitle() != null) {
+            post.setTitle(request.getTitle());
+        }
+
+        if (request.getContent() != null) {
+            post.setContent(request.getContent());
+        }
+
+        if (request.getPostType() != null) {
+            post.setPostType(request.getPostType());
+        }
+
+        if (request.getLocation() != null) {
+            post.setLocation(request.getLocation());
+        }
+
+        if (request.getContactName() != null) {
+            post.setContactName(request.getContactName());
+        }
+
+        if (request.getContactPhone() != null) {
+            post.setContactPhone(request.getContactPhone());
+        }
+
+        if (request.getTargetAmount() != null) {
+            post.setTargetAmount(request.getTargetAmount());
+        }
 
         Post updatedPost = postRepository.save(post);
         return mapToResponse(updatedPost);
     }
 
+    @Override
+    @Transactional
     public void delete(UUID id) {
         if (!postRepository.existsById(id)) {
             throw new RuntimeException("Post not found with id: " + id);

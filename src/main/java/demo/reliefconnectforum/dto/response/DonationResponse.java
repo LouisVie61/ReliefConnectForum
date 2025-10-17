@@ -13,6 +13,7 @@ import java.util.UUID;
 public class DonationResponse {
     private UUID id;
     private BigDecimal amount;
+    private String currency;
     private String place;
     private String message;
     private UUID postId;
@@ -35,6 +36,14 @@ public class DonationResponse {
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 
     public String getPlace() {

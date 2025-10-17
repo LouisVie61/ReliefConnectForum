@@ -55,6 +55,7 @@ public class DonationServiceImpl implements DonationService {
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId())));
         donation.setPost(postRepository.findById(request.getPostId())
                 .orElseThrow(() -> new RuntimeException("Post not found with id: " + request.getPostId())));
+        donation.setCurrency(request.getCurrency());
         donation.setLocation(request.getLocation());
         donation.setMessage(request.getMessage());
 
@@ -92,6 +93,7 @@ public class DonationServiceImpl implements DonationService {
         DonationResponse response = new DonationResponse();
         response.setId(donation.getId());
         response.setAmount(donation.getAmount());
+        response.setCurrency(donation.getCurrency());
         response.setMessage(donation.getMessage());
         response.setPostId(donation.getPost().getId());
         response.setPostTitle(donation.getPost().getTitle());
