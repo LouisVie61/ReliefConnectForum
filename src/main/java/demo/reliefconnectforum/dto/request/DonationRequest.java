@@ -16,6 +16,8 @@ public class DonationRequest {
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
     private BigDecimal amount;
 
+    private String currency;
+
     @NotBlank(message = "location is required")
     private String location;
 
@@ -33,6 +35,14 @@ public class DonationRequest {
 
     public void setAmount(@NotNull(message = "Amount is required") @DecimalMin(value = "0.01", message = "Amount must be greater than 0") BigDecimal amount) {
         this.amount = amount;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 
     public @NotBlank(message = "location is required") String getLocation() {
