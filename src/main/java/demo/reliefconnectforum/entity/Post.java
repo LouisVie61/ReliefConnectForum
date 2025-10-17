@@ -6,10 +6,15 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "posts")
+@Table(name = "posts", indexes = {
+        @Index(name = "idx_posts_title", columnList = "title"),
+        @Index(name = "idx_posts_post_type", columnList = "post_type"),
+        @Index(name = "idx_posts_location", columnList = "location")
+})
 public class Post {
 
     @Id
@@ -18,17 +23,25 @@ public class Post {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private UUID id;
 
-    @Column(nullable = false, length = 140)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User author;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private List<Donation> donations;
+
+    @Column(name = "title", nullable = false, length = 140)
     private String title;
 
-    @Column(nullable = false, length = 4000)
-    private String description;
+    @Column(name = "content", nullable = false, length = 4000)
+    private String content;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "post_type", nullable = false, length = 20)
     private PostType postType;
 
-    @Column(length = 255)
+    @Column(name = "location", length = 255)
     private String location;
 
     @Column(name = "contact_name", length = 120)
@@ -61,7 +74,6 @@ public class Post {
     public UUID getId() {
         return id;
     }
-
     public void setId(UUID id) {
         this.id = id;
     }
@@ -69,23 +81,20 @@ public class Post {
     public String getTitle() {
         return title;
     }
-
     public void setTitle(String title) {
         this.title = title;
     }
 
-    public String getDescription() {
-        return description;
+    public String getContent() {
+        return content;
     }
-
-    public void setDescription(String description) {
-        this.description = description;
+    public void setContent(String content) {
+        this.content = content;
     }
 
     public PostType getPostType() {
         return postType;
     }
-
     public void setPostType(PostType postType) {
         this.postType = postType;
     }
@@ -93,7 +102,6 @@ public class Post {
     public String getLocation() {
         return location;
     }
-
     public void setLocation(String location) {
         this.location = location;
     }
@@ -101,7 +109,6 @@ public class Post {
     public String getContactName() {
         return contactName;
     }
-
     public void setContactName(String contactName) {
         this.contactName = contactName;
     }
@@ -109,7 +116,6 @@ public class Post {
     public String getContactPhone() {
         return contactPhone;
     }
-
     public void setContactPhone(String contactPhone) {
         this.contactPhone = contactPhone;
     }
@@ -117,7 +123,6 @@ public class Post {
     public BigDecimal getTargetAmount() {
         return targetAmount;
     }
-
     public void setTargetAmount(BigDecimal targetAmount) {
         this.targetAmount = targetAmount;
     }
@@ -125,7 +130,6 @@ public class Post {
     public BigDecimal getCurrentAmount() {
         return currentAmount;
     }
-
     public void setCurrentAmount(BigDecimal currentAmount) {
         this.currentAmount = currentAmount;
     }
@@ -133,8 +137,17 @@ public class Post {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public User getAuthor() { return author; }
+    public void setAuthor(User author) { this.author = author; }
+
+    public List<Donation> getDonations() {
+        return donations;
+    }
+    public void setDonations(List<Donation> donations) {
+        this.donations = donations;
     }
 }
