@@ -1,4 +1,4 @@
 package demo.reliefconnectforum.config;
 
-public class ElasticsearchConfig {
+public class JwtAuthenticationEntryPoint {
 }
