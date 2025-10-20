@@ -19,8 +19,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private UserRepository userRepository;
 
     private static String normalizeRoleToAuthority(String roleFromDb) {
-        if (roleFromDb == null || roleFromDb.isBlank()) return "ROLE_USER";
-        return roleFromDb.startsWith("ROLE_") ? roleFromDb : "ROLE_" + roleFromDb;
+        if (roleFromDb == null || roleFromDb.isBlank()) return "USER";
+        return roleFromDb;
     }
 
     @Override
