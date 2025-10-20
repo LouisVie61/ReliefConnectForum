@@ -308,6 +308,7 @@ Authorization: Bearer <your-token>
 ## Version 2 Improvements Summary
 
 ### ✅ Implemented
+- **Layered split**: Auth service, Post service, Donation service
 - **Security**: JWT authentication with access/refresh tokens
 - **User Management**: Registration, login, role-based authorization
 - **Password Security**: BCrypt hashing with salt
@@ -330,7 +331,6 @@ Authorization: Bearer <your-token>
 - No email verification on registration
 
 ### 🎯 Planned for Version 3 (Full Layered Architecture)
-- **Microservices split**: Auth service, Post service, Donation service
 - **Message queue**: RabbitMQ/Kafka for async operations
 - **Caching**: Redis for token blacklist and session management
 - **File upload**: S3/Cloudinary for avatars and post images
