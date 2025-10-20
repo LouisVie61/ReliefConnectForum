@@ -353,7 +353,7 @@ Version 1 was a simple monolithic application with:
 - Manual UUID generation
 - Basic Swagger documentation
 
-**Key differences from v2:**
+**Key differences from v2:** 
 - Open endpoints (no security)
 - No user management
 - No token-based authentication
