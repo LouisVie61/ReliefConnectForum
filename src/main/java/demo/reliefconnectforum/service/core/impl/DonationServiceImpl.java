@@ -7,8 +7,10 @@ import demo.reliefconnectforum.repository.DonationRepository;
 import demo.reliefconnectforum.repository.PostRepository;
 import demo.reliefconnectforum.repository.UserRepository;
 import demo.reliefconnectforum.service.core.DonationService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,14 +31,16 @@ public class DonationServiceImpl implements DonationService {
     private UserRepository userRepository;
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
+    @Cacheable(value = "allDonations", key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<DonationResponse> getAll(Pageable pageable) {
         return donationRepository.findAll(pageable)
                 .map(this::mapToResponse);
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
+    @Cacheable(value = "donationById", key = "#id")
     public DonationResponse getById(UUID id) {
         Optional<Donation> donation = donationRepository.findById(id);
         if (donation.isPresent()) {
@@ -48,6 +52,11 @@ public class DonationServiceImpl implements DonationService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {
+        "allDonations", "donationById", "donationStatisticsByPost",
+        "donationsByLocation", "donationsByLocations",
+        "totalDonationsByPost", "postById", "allPosts"
+    }, allEntries = true)
     public DonationResponse create(DonationRequest request) {
         Donation donation = new Donation();
         donation.setAmount(request.getAmount());
@@ -65,6 +74,11 @@ public class DonationServiceImpl implements DonationService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {
+        "allDonations", "donationById", "donationStatisticsByPost",
+        "donationsByLocation", "donationsByLocations",
+        "totalDonationsByPost", "postById", "allPosts"
+    }, allEntries = true)
     public DonationResponse update(UUID id, DonationRequest request) {
         Optional<Donation> existingDonationOpt = donationRepository.findById(id);
         if (existingDonationOpt.isPresent()) {
@@ -81,6 +95,11 @@ public class DonationServiceImpl implements DonationService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {
+        "allDonations", "donationById", "donationStatisticsByPost",
+        "donationsByLocation", "donationsByLocations",
+        "totalDonationsByPost", "postById", "allPosts"
+    }, allEntries = true)
     public void delete(UUID id) {
         if (donationRepository.existsById(id)) {
             donationRepository.deleteById(id);

@@ -8,8 +8,11 @@ import demo.reliefconnectforum.entity.User;
 import demo.reliefconnectforum.repository.DonationRepository;
 import demo.reliefconnectforum.repository.PostRepository;
 import demo.reliefconnectforum.repository.UserRepository;
+import demo.reliefconnectforum.service.core.AdminService;
 import demo.reliefconnectforum.service.core.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -30,10 +33,11 @@ public class PostServiceImpl implements PostService {
     private UserRepository userRepository;
 
     @Autowired
-    private DonationRepository donationRepository;
+    private AdminService adminService;
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "allPosts", key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<PostResponse> getAll(Pageable pageable) {
         return postRepository.findAllWithUser(pageable)
                 .map(this::mapToResponse);
@@ -41,6 +45,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "postById", key = "#id")
     public PostResponse getById(UUID id) {
         Post post = postRepository.findByIdWithUser(id)
                 .orElseThrow(() -> new RuntimeException("Post not found with id: " + id));
@@ -49,6 +54,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"allPosts", "postsByPlace", "postsByPlaces"}, allEntries = true)
     public PostResponse create(PostRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
@@ -70,6 +76,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"postById", "allPosts"}, allEntries = true)
     public PostResponse update(UUID id, PostRequest request) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found with id: " + id));
@@ -108,6 +115,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"allPosts", "postById", "postsByPlace", "postsByPlaces"}, allEntries = true)
     public void delete(UUID id) {
         if (!postRepository.existsById(id)) {
             throw new RuntimeException("Post not found with id: " + id);
@@ -117,6 +125,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "postsByPlace", key = "#place + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<PostResponse> findByPlace(String place, Pageable pageable) {
         return postRepository.findByLocationWithUser(place, pageable)
                 .map(this::mapToResponse);
@@ -124,6 +133,8 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "postsByPlaces",
+        key = "T(java.util.Arrays).stream(#places).sorted().collect(T(java.util.stream.Collectors).joining(',')) + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<PostResponse> findByPlaces(String[] places, Pageable pageable) {
         return postRepository.findByLocationInWithUser(places, pageable)
                 .map(this::mapToResponse);
@@ -139,7 +150,7 @@ public class PostServiceImpl implements PostService {
         response.setUsername(post.getAuthor().getUsername());
         response.setCreatedAt(post.getCreatedAt());
 
-        BigDecimal totalDonations = donationRepository.sumDonationsByPostId(post.getId());
+        BigDecimal totalDonations = adminService.getTotalDonationsByPostId(post.getId()); // cached hit here
         response.setTotalDonations(totalDonations != null ? totalDonations : BigDecimal.ZERO);
 
         return response;
