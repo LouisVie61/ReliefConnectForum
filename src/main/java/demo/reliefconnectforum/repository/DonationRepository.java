@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -47,4 +48,11 @@ public interface DonationRepository extends JpaRepository<Donation, UUID> {
            countQuery = "SELECT COUNT(*) FROM donations d WHERE d.amount >= :amount",
            nativeQuery = true)
     Page<Donation> findByMinAmountWithDetails(@Param("amount") BigDecimal amount, Pageable pageable);
+
+    @Query(value = "SELECT d.post_id, COALESCE(SUM(d.amount), 0) " +
+            "FROM donations d " +
+            "WHERE d.post_id IN :postIds " +
+            "GROUP BY d.post_id",
+            nativeQuery = true)
+    List<Object[]> sumDonationsByPostIds(@Param("postIds") List<UUID> postIds);
 }
