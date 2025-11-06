@@ -20,7 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -35,12 +38,29 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private AdminService adminService;
 
+    @Autowired
+    private DonationRepository donationRepository;
+
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "allPosts", key = "#pageable.pageNumber + '-' + #pageable.pageSize")
+    // Batch fetch technique to avoid N+1 problem
     public Page<PostResponse> getAll(Pageable pageable) {
-        return postRepository.findAllWithUser(pageable)
-                .map(this::mapToResponse);
+        Page<Post> posts = postRepository.findAllWithUser(pageable);
+
+        List<UUID> postIds = posts.getContent().stream()
+            .map(Post::getId)
+            .toList();
+
+        List<Object[]> results = donationRepository.sumDonationsByPostIds(postIds);
+        Map<UUID, BigDecimal> totalsMap = results.stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> (BigDecimal) row[1]
+                ));
+
+        return posts.map(post ->
+            mapToResponse(post, totalsMap.getOrDefault(post.getId(), BigDecimal.ZERO))
+        );
     }
 
     @Override
@@ -76,7 +96,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"postById", "allPosts"}, allEntries = true)
+    @CacheEvict(value = {"postById", "allPosts", "postsByPlace", "postsByPlaces"}, allEntries = true)
     public PostResponse update(UUID id, PostRequest request) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found with id: " + id));
@@ -127,20 +147,39 @@ public class PostServiceImpl implements PostService {
     @Transactional(readOnly = true)
     @Cacheable(value = "postsByPlace", key = "#place + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<PostResponse> findByPlace(String place, Pageable pageable) {
-        return postRepository.findByLocationWithUser(place, pageable)
-                .map(this::mapToResponse);
+        Page<Post> posts = postRepository.findByLocationWithUser(place, pageable);
+
+        List<UUID> postIds = posts.getContent().stream().map(Post::getId).toList();
+        List<Object[]> results = donationRepository.sumDonationsByPostIds(postIds);
+        Map<UUID, BigDecimal> totalsMap = results.stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> (BigDecimal) row[1]
+                ));
+
+        return posts.map(post -> mapToResponse(post, totalsMap.getOrDefault(post.getId(), BigDecimal.ZERO)));
     }
 
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = "postsByPlaces",
-        key = "T(java.util.Arrays).stream(#places).sorted().collect(T(java.util.stream.Collectors).joining(',')) + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
+            key = "T(java.util.Arrays).stream(#places).sorted().collect(T(java.util.stream.Collectors).joining(',')) + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<PostResponse> findByPlaces(String[] places, Pageable pageable) {
-        return postRepository.findByLocationInWithUser(places, pageable)
-                .map(this::mapToResponse);
+        Page<Post> posts = postRepository.findByLocationInWithUser(places, pageable);
+
+        List<UUID> postIds = posts.getContent().stream().map(Post::getId).toList();
+        List<Object[]> results = donationRepository.sumDonationsByPostIds(postIds);
+        Map<UUID, BigDecimal> totalsMap = results.stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> (BigDecimal) row[1]
+                ));
+
+        return posts.map(post -> mapToResponse(post, totalsMap.getOrDefault(post.getId(), BigDecimal.ZERO)));
     }
 
-    private PostResponse mapToResponse(Post post) {
+    // Overloaded version for batch operations (getAll, findByPlace, findByPlaces)
+    private PostResponse mapToResponse(Post post, BigDecimal totalDonations) {
         PostResponse response = new PostResponse();
         response.setId(post.getId());
         response.setTitle(post.getTitle());
@@ -149,10 +188,13 @@ public class PostServiceImpl implements PostService {
         response.setUserId(post.getAuthor().getId());
         response.setUsername(post.getAuthor().getUsername());
         response.setCreatedAt(post.getCreatedAt());
-
-        BigDecimal totalDonations = adminService.getTotalDonationsByPostId(post.getId()); // cached hit here
-        response.setTotalDonations(totalDonations != null ? totalDonations : BigDecimal.ZERO);
-
+        response.setTotalDonations(totalDonations);
         return response;
+    }
+
+    // Keep existing method for single-post operations (getById)
+    private PostResponse mapToResponse(Post post) {
+        BigDecimal totalDonations = adminService.getTotalDonationsByPostId(post.getId());
+        return mapToResponse(post, totalDonations != null ? totalDonations : BigDecimal.ZERO);
     }
 }
