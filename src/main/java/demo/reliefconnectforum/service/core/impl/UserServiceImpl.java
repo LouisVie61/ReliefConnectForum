@@ -5,8 +5,10 @@ import demo.reliefconnectforum.dto.response.UserResponse;
 import demo.reliefconnectforum.entity.User;
 import demo.reliefconnectforum.repository.UserRepository;
 import demo.reliefconnectforum.service.core.UserService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -28,6 +30,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "userById", key = "#id")
     public UserResponse getUserById(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
@@ -35,6 +38,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserResponse create(UserRequest request) {
         User user = new User();
         user.setUsername(request.getUsername());
@@ -50,6 +54,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {
+        "userById",
+        "allPosts", "postById",           // User data in posts
+        "allDonations", "donationById"    // User data in donations
+    }, allEntries = true)
     public UserResponse update(UUID id, UserRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
