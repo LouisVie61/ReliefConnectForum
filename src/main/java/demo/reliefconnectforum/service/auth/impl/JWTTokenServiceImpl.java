@@ -115,6 +115,56 @@ public class JWTTokenServiceImpl implements JWTTokenService {
         log.info("Stored token for user {} with TTL {}s", userId, durationSeconds);
     }
 
+    /**
+     *
+     * use this function for stress testing with JMeter
+     *
+     # Clear Redis
+     redis-cli -p 6380 FLUSHDB
+
+     # Rebuild
+     mvn clean compile
+
+     # Run with stress test profile
+     mvn spring-boot:run -Dspring-boot.run.profiles=stresstest
+     *
+     *
+     * Switch back to dev profile
+     * mvn spring-boot:run -Dspring-boot.run.profiles=dev
+     *
+     @Override
+     public void storeToken(String userId, String token, long durationSeconds) {
+         if (userId == null || userId.isEmpty()) {
+         throw new IllegalArgumentException("userId must not be null or empty");
+         }
+
+         if (token == null || token.isEmpty()) {
+         throw new IllegalArgumentException("token must not be null or empty");
+         }
+
+        // Store token (always executed)
+        String tokenKey = properties.getTokenPrefix() + token;
+        String tokenUserKey = properties.getReverseMapPrefix() + token;
+        String userTokensKey = properties.getUserTokensPrefix() + userId;
+
+        redisTemplate.execute(new SessionCallback<Void>() {
+            @Override
+            public Void execute(RedisOperations operations) throws DataAccessException {
+                operations.multi();
+                operations.opsForHash().put(tokenKey, "userId", userId);
+                operations.opsForHash().put(tokenKey, "issuedAt", System.currentTimeMillis());
+                operations.expire(tokenKey, durationSeconds, TimeUnit.SECONDS);
+                operations.opsForValue().set(tokenUserKey, userId, durationSeconds, TimeUnit.SECONDS);
+                operations.opsForSet().add(userTokensKey, token);
+                operations.expire(userTokensKey, durationSeconds, TimeUnit.SECONDS);
+                operations.exec();
+                return null;
+            }
+        });
+
+        log.info("Stored token for user {} with TTL {}s (throttling disabled)", userId, durationSeconds);
+    }
+     */
 
     @Override
     public boolean isTokenValid(String userId, String token) {
