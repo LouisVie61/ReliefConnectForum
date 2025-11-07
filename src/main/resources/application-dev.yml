@@ -30,6 +30,13 @@ jwt:
     expiration: 86400000
   refresh-token:
     expiration: 604800000
+  redis:
+    token-prefix: "jwt:token:"
+    user-tokens-prefix: "jwt:user:"
+    reverse-map-prefix: "jwt:token-user:"
+    revocation-batch-size: 1000
+    max-sessions-per-user: 5
+    client-name: reliefConnectForum
 
 server:
   port: 8080
