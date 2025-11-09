@@ -3,6 +3,8 @@ package demo.reliefconnectforum.entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import demo.reliefconnectforum.Enum.PostType;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,6 +17,8 @@ import java.util.UUID;
         @Index(name = "idx_posts_post_type", columnList = "post_type"),
         @Index(name = "idx_posts_location", columnList = "location")
 })
+@Getter
+@Setter
 public class Post {
 
     @Id
