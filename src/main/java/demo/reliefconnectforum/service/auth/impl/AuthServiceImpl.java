@@ -1,5 +1,6 @@
 package demo.reliefconnectforum.service.auth.impl;
 
+import demo.reliefconnectforum.Enum.AuthProviderEnum;
 import demo.reliefconnectforum.Enum.UserRoleEnum;
 import demo.reliefconnectforum.config.JwtUtil;
 import demo.reliefconnectforum.dto.request.UserLoginRequest;
@@ -55,6 +56,7 @@ public class AuthServiceImpl implements AuthService {
         user.setUsername(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(UserRoleEnum.USER);
+        user.setProvider(AuthProviderEnum.NULL);
         user.setCreatedAt(LocalDateTime.now());
 
         User savedUser = userRepository.save(user);

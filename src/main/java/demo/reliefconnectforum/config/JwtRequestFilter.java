@@ -1,7 +1,14 @@
 package demo.reliefconnectforum.config;
 
+import demo.reliefconnectforum.repository.UserRepository;
+import demo.reliefconnectforum.service.auth.JWTTokenService;
 import demo.reliefconnectforum.service.auth.impl.UserDetailsServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,11 +17,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
@@ -25,61 +29,89 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private JWTTokenService jwtTokenService;
+
+    @Autowired
+    private UserRepository userRepository;
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
 
-        String requestPath = request.getRequestURI();
-
-        // Skip JWT validation for public endpoints
-        if (shouldSkipFilter(requestPath)) {
-            logger.info("Skipping JWT filter for public endpoint: " + requestPath);
+        String path = request.getRequestURI();
+        if (isPublic(path)) {
             chain.doFilter(request, response);
             return;
         }
 
-        final String requestTokenHeader = request.getHeader("Authorization");
-
-        logger.info("Processing protected endpoint: " + requestPath);
-        logger.info("Authorization header: " + requestTokenHeader);
-
-        String username = null;
+        String header = request.getHeader("Authorization");
         String jwtToken = null;
 
-        if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
-            jwtToken = requestTokenHeader.substring(7);
-            logger.info("Extracted JWT token: " + jwtToken.substring(0, Math.min(20, jwtToken.length())) + "...");
-            try {
-                username = jwtUtil.extractUsername(jwtToken);
-            } catch (ExpiredJwtException e) {
-                logger.warn("JWT Token has expired");
-            } catch (Exception e) {
-                logger.warn("Unable to get JWT Token: " + e.getMessage());
-            }
-        } else {
-            logger.warn("No Bearer token found in Authorization header");
+        if (header != null && header.startsWith("Bearer ")) {
+            jwtToken = header.substring(7);
+        } else if (request.getCookies() != null) {
+            jwtToken = Arrays.stream(request.getCookies())
+                    .filter(c -> "ACCESS_TOKEN".equals(c.getName()))
+                    .map(Cookie::getValue)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        if (jwtToken == null) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        String username = null;
+        try {
+            username = jwtUtil.extractUsername(jwtToken);
+        } catch (ExpiredJwtException e) {
+            logger.debug("JWT expired");
+        } catch (Exception e) {
+            logger.debug("JWT parse error: " + e.getMessage());
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            if (jwtUtil.isTokenValid(jwtToken, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken =
+            boolean signatureValid = jwtUtil.isTokenValid(jwtToken, userDetails);
+            boolean redisValid = false;
+
+            if (signatureValid) {
+                var userEntity = userRepository.findByEmail(username);
+                if (userEntity != null) {
+                    redisValid = jwtTokenService.isTokenValid(userEntity.getId().toString(), jwtToken);
+                }
+            }
+
+            if (signatureValid && redisValid) {
+                UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-                logger.info("Successfully authenticated user: " + username);
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(auth);
             }
         }
+
         chain.doFilter(request, response);
     }
-
-    private boolean shouldSkipFilter(String requestPath) {
-        return requestPath.startsWith("/api/auth/") ||
-               requestPath.startsWith("/swagger-ui/") ||
-               requestPath.startsWith("/v3/api-docs/") ||
-               requestPath.equals("/swagger-ui.html") ||
-               requestPath.startsWith("/h2-console/");
+    private boolean isPublic(String path) {
+        return path.startsWith("/api/auth/") ||
+                path.startsWith("/swagger-ui/") ||
+                path.startsWith("/swagger-ui.html") ||
+                path.startsWith("/v3/api-docs") ||  // Changed: removed trailing slash
+                path.equals("/v3/api-docs") ||
+                path.startsWith("/swagger-resources") ||
+                path.startsWith("/webjars/") ||
+                path.equals("/swagger-ui.html") ||
+                path.startsWith("/h2-console/") ||
+                path.startsWith("/oauth2/") ||
+                path.startsWith("/login/oauth2/") ||
+                path.startsWith("/test/");
     }
 }
