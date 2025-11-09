@@ -9,6 +9,7 @@ import demo.reliefconnectforum.repository.DonationRepository;
 import demo.reliefconnectforum.repository.PostRepository;
 import demo.reliefconnectforum.repository.UserRepository;
 import demo.reliefconnectforum.service.core.AdminService;
+import demo.reliefconnectforum.service.core.PostDocService;
 import demo.reliefconnectforum.service.core.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -40,6 +41,9 @@ public class PostServiceImpl implements PostService {
 
     @Autowired
     private DonationRepository donationRepository;
+
+    @Autowired
+    private PostDocService postDocService;
 
     @Override
     @Transactional(readOnly = true)
@@ -91,6 +95,7 @@ public class PostServiceImpl implements PostService {
         post.setCreatedAt(LocalDateTime.now());
 
         Post savedPost = postRepository.save(post);
+        postDocService.indexPost(savedPost);
         return mapToResponse(savedPost);
     }
 
@@ -130,6 +135,7 @@ public class PostServiceImpl implements PostService {
         }
 
         Post updatedPost = postRepository.save(post);
+        postDocService.indexPost(updatedPost);
         return mapToResponse(updatedPost);
     }
 
@@ -141,6 +147,7 @@ public class PostServiceImpl implements PostService {
             throw new RuntimeException("Post not found with id: " + id);
         }
         postRepository.deleteById(id);
+        postDocService.deletePost(id.toString());
     }
 
     @Override
