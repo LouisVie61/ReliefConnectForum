@@ -16,14 +16,14 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI reliefConnectOpenAPI() {
         return new OpenAPI()
-                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
                 .components(new Components()
-                        .addSecuritySchemes("bearerAuth", new SecurityScheme()
+                        .addSecuritySchemes("Bearer Authentication", new SecurityScheme()
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT")
                                 .name("Authorization")
-                                .description("JWT Authorization header using the Bearer scheme")))
+                                .description("JWT token. Format: Bearer {token}")))
                 .info(new Info()
                         .title("Relief Connect API")
                         .description("API cho hệ thống cầu cứu & gây quỹ vùng lũ - version 2")

@@ -9,6 +9,7 @@ import demo.reliefconnectforum.dto.response.UserRegisterResponse;
 import demo.reliefconnectforum.entity.User;
 import demo.reliefconnectforum.repository.UserRepository;
 import demo.reliefconnectforum.service.auth.AuthService;
+import demo.reliefconnectforum.service.auth.JWTTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -38,6 +39,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
+
+    @Autowired
+    private JWTTokenService jwtTokenService;
 
     @Override
     public UserRegisterResponse register(UserRegisterRequest request) {
@@ -78,10 +82,16 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("User not found");
         }
 
-
         // Generate tokens
         String accessToken = jwtUtil.generateAccessToken(userDetails);
         String refreshToken = jwtUtil.generateRefreshToken(userDetails);
+
+        long accessTtl = jwtUtil.getAccessTokenExpiration() / 1000;
+        long refreshTtl = jwtUtil.getRefreshTokenExpiration() / 1000;
+
+        jwtTokenService.storeToken(user.getId().toString(), accessToken, accessTtl);
+        jwtTokenService.storeToken(user.getId().toString(), refreshToken, refreshTtl);
+
 
         return UserLoginResponse.builder()
                 .accessToken(accessToken)
@@ -102,6 +112,8 @@ public class AuthServiceImpl implements AuthService {
             if (user == null) {
                 throw new RuntimeException("User not found");
             }
+
+            jwtTokenService.revokeToken(user.getId().toString(), refreshToken);
 
             if (jwtUtil.isTokenValid(refreshToken, email)) {
                 String newAccessToken = jwtUtil.generateAccessToken(email);
@@ -125,15 +137,14 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void logout(String refreshToken) {
-        try {
-            // Add token to blacklist or invalidate it in the next version
-            String email = jwtUtil.extractUsername(refreshToken);
-            if (!jwtUtil.isTokenValid(refreshToken, email)) {
-                throw new RuntimeException("Invalid refresh token");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid refresh token");
+    public void logout(String token) {
+        String email = jwtUtil.extractUsername(token);
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            throw new RuntimeException("User not found");
         }
+
+        jwtTokenService.revokeToken(user.getId().toString(), token);
     }
 }
