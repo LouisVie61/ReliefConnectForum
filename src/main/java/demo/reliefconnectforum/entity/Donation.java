@@ -2,6 +2,9 @@ package demo.reliefconnectforum.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -11,6 +14,8 @@ import java.util.UUID;
         @Index(name = "idx_donations_user", columnList = "user_id"),
         @Index(name = "idx_donations_post", columnList = "post_id")
 })
+@Getter
+@Setter
 public class Donation {
 
     @Id
@@ -47,33 +52,5 @@ public class Donation {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
-    }
-
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-
-    public BigDecimal getAmount() { return amount; }
-    public void setAmount(BigDecimal amount) { this.amount = amount; }
-
-    public String getCurrency() { return currency; }
-    public void setCurrency(String currency) { this.currency = currency; }
-
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public Post getPost() { return post; }
-    public void setPost(Post post) { this.post = post; }
-
-    public String getLocation() {
-        return location;
-    }
-    public void setLocation(String location) {
-        this.location = location;
     }
 }
