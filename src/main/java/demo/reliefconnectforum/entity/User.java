@@ -1,8 +1,11 @@
 package demo.reliefconnectforum.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import demo.reliefconnectforum.Enum.AuthProviderEnum;
 import demo.reliefconnectforum.Enum.UserRoleEnum;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,6 +16,8 @@ import java.util.UUID;
         @Index(name = "idx_users_username", columnList = "username"),
         @Index(name = "idx_users_email", columnList = "email")
 })
+@Getter
+@Setter
 public class User {
 
     @Id
@@ -24,7 +29,7 @@ public class User {
     @Column(name = "username", nullable = false, length = 100, unique = true)
     private String username;
 
-    @Column(name = "password", nullable = false, length = 255)
+    @Column(name = "password", length = 255)
     private String password;
 
     @Column(name = "full_name", length = 150)
@@ -45,6 +50,10 @@ public class User {
 
     @Column(name = "avatar_url", length = 255)
     private String avatarUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "provider", length = 50)
+    private AuthProviderEnum provider;
 
     @Column(name = "bio", length = 500)
     private String bio;
@@ -69,51 +78,5 @@ public class User {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
-    }
-
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
-
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
-
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
-
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
-
-    public UserRoleEnum getRole() { return role; }
-    public void setRole(UserRoleEnum role) { this.role = role; }
-
-    public String getAvatarUrl() { return avatarUrl; }
-    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
-
-    public String getBio() { return bio; }
-    public void setBio(String bio) { this.bio = bio; }
-
-    public List<Post> getPosts() { return posts; }
-    public void setPosts(List<Post> posts) { this.posts = posts; }
-
-    public int getPostCount() { return postCount; }
-    public void setPostCount(int postCount) { this.postCount = postCount; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public List<Donation> getDonations() {
-        return donations;
-    }
-    public void setDonations(List<Donation> donations) {
-        this.donations = donations;
     }
 }
