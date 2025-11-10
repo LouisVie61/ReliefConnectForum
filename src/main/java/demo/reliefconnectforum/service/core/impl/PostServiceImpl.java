@@ -11,6 +11,7 @@ import demo.reliefconnectforum.repository.UserRepository;
 import demo.reliefconnectforum.service.core.AdminService;
 import demo.reliefconnectforum.service.core.PostDocService;
 import demo.reliefconnectforum.service.core.PostService;
+import demo.reliefconnectforum.service.event.AIJobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -44,6 +45,9 @@ public class PostServiceImpl implements PostService {
 
     @Autowired
     private PostDocService postDocService;
+
+    @Autowired
+    private AIJobService aiJobService;
 
     @Override
     @Transactional(readOnly = true)
@@ -87,15 +91,21 @@ public class PostServiceImpl implements PostService {
         post.setTitle(request.getTitle());
         post.setContent(request.getContent());
         post.setAuthor(user);
-        post.setPostType(request.getPostType() != null ? request.getPostType() : PostType.RESCUE);
         post.setLocation(request.getLocation());
         post.setContactName(request.getContactName());
         post.setContactPhone(request.getContactPhone());
         post.setTargetAmount(request.getTargetAmount());
         post.setCreatedAt(LocalDateTime.now());
-
         Post savedPost = postRepository.save(post);
         postDocService.indexPost(savedPost);
+
+        boolean aiJobSubmitted = aiJobService.submitJob(savedPost.getId());
+        if (!aiJobSubmitted) {
+            savedPost.setPostType(PostType.UNKNOWN);
+        } else {
+            savedPost.setPostType(PostType.PENDING);
+        }
+
         return mapToResponse(savedPost);
     }
 
