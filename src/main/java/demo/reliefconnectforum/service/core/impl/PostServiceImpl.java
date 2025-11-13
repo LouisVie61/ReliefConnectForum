@@ -11,6 +11,7 @@ import demo.reliefconnectforum.repository.UserRepository;
 import demo.reliefconnectforum.service.core.AdminService;
 import demo.reliefconnectforum.service.core.PostDocService;
 import demo.reliefconnectforum.service.core.PostService;
+import demo.reliefconnectforum.service.event.AIJobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -18,6 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -27,7 +30,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
 public class PostServiceImpl implements PostService {
 
     @Autowired
@@ -44,6 +46,9 @@ public class PostServiceImpl implements PostService {
 
     @Autowired
     private PostDocService postDocService;
+
+    @Autowired
+    private AIJobService aiJobService;
 
     @Override
     @Transactional(readOnly = true)
@@ -77,9 +82,24 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    @Transactional
     @CacheEvict(value = {"allPosts", "postsByPlace", "postsByPlaces"}, allEntries = true)
     public PostResponse create(PostRequest request) {
+        PostResponse response = createPost(request);
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        aiJobService.submitJob(response.getId());
+                    }
+                }
+        );
+
+        return response;
+    }
+
+    @Transactional
+    protected PostResponse createPost(PostRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
 
@@ -87,15 +107,16 @@ public class PostServiceImpl implements PostService {
         post.setTitle(request.getTitle());
         post.setContent(request.getContent());
         post.setAuthor(user);
-        post.setPostType(request.getPostType() != null ? request.getPostType() : PostType.RESCUE);
         post.setLocation(request.getLocation());
         post.setContactName(request.getContactName());
         post.setContactPhone(request.getContactPhone());
         post.setTargetAmount(request.getTargetAmount());
         post.setCreatedAt(LocalDateTime.now());
+        post.setPostType(PostType.PENDING);
 
         Post savedPost = postRepository.save(post);
         postDocService.indexPost(savedPost);
+
         return mapToResponse(savedPost);
     }
 
@@ -112,10 +133,6 @@ public class PostServiceImpl implements PostService {
 
         if (request.getContent() != null) {
             post.setContent(request.getContent());
-        }
-
-        if (request.getPostType() != null) {
-            post.setPostType(request.getPostType());
         }
 
         if (request.getLocation() != null) {
@@ -194,6 +211,7 @@ public class PostServiceImpl implements PostService {
         response.setLocation(post.getLocation());
         response.setUserId(post.getAuthor().getId());
         response.setUsername(post.getAuthor().getUsername());
+        response.setPostType(post.getPostType());
         response.setCreatedAt(post.getCreatedAt());
         response.setTotalDonations(totalDonations);
         return response;

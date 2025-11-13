@@ -17,7 +17,6 @@ public class PostRequest {
     private String title;
     private String content;
     private UUID userId;
-    private PostType postType;
     private String location;
     private String contactName;
     private String contactPhone;

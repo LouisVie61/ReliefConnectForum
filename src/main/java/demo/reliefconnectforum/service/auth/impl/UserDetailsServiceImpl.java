@@ -34,9 +34,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         String authority = normalizeRoleToAuthority(appUser.getRole().name());
         List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(authority));
 
+        String password = appUser.getPassword() != null
+                ? appUser.getPassword()
+                : "{noop}OAUTH2_NO_PASSWORD";
+
         return org.springframework.security.core.userdetails.User.builder()
                 .username(appUser.getEmail())
-                .password(appUser.getPassword())
+                .password(password)
                 .authorities(authorities)
                 .accountExpired(false)
 //                .accountLocked(!appUser.isActive())

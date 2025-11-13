@@ -3,6 +3,7 @@ package demo.reliefconnectforum.controller;
 import demo.reliefconnectforum.dto.request.PostRequest;
 import demo.reliefconnectforum.dto.response.PostResponse;
 import demo.reliefconnectforum.service.core.PostService;
+import demo.reliefconnectforum.service.event.AIJobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -27,6 +28,9 @@ public class PostController {
 
     @Autowired
     private PostService postService;
+
+    @Autowired
+    private AIJobService aiJobService;
 
     @GetMapping
     @Operation(summary = "Get all posts with pagination")
@@ -149,6 +153,19 @@ public class PostController {
             return ResponseEntity.ok(postService.findByPlaces(places, pageable));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/{postId}/reclassify")
+    public ResponseEntity<?> reclassifyPost(@PathVariable UUID postId) {
+
+        boolean jobSubmitted = aiJobService.submitJob(postId);
+
+        if (jobSubmitted) {
+            return ResponseEntity.ok("Successfully classifying");
+        } else {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body("This service is being disable at the moment. Please try again");
         }
     }
 }
