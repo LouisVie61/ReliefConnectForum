@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,4 +34,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
            countQuery = "SELECT COUNT(*) FROM posts WHERE location = ANY(:locations)",
            nativeQuery = true)
     Page<Post> findByLocationInWithUser(@Param("locations") String[] locations, Pageable pageable);
+
+    @Query("SELECT p FROM Post p WHERE p.updatedAt >= :threshold")
+    List<Post> findRecentlyUpdated(@Param("threshold") LocalDateTime threshold);
 }

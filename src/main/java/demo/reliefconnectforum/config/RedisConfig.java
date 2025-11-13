@@ -66,7 +66,7 @@ public class RedisConfig {
         GenericJackson2JsonRedisSerializer jsonSerializer =
                 new GenericJackson2JsonRedisSerializer(objectMapper);
 
-        RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
+        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofHours(1))
                 .disableCachingNullValues()
                 .serializeKeysWith(org.springframework.data.redis.serializer.RedisSerializationContext.SerializationPair
@@ -75,8 +75,15 @@ public class RedisConfig {
                         .fromSerializer(jsonSerializer))
                 .prefixCacheNameWith("reliefconnect::");
 
+        RedisCacheConfiguration shortLivedConfig = defaultConfig
+                .entryTtl(Duration.ofMinutes(5));
+
         return RedisCacheManager.builder(connectionFactory)
-                .cacheDefaults(cacheConfig)
+                .cacheDefaults(defaultConfig)
+                .withCacheConfiguration("postById", defaultConfig)           // 1 hour
+                .withCacheConfiguration("allPosts", shortLivedConfig)        // 5 minutes
+                .withCacheConfiguration("postsByPlace", shortLivedConfig)    // 5 minutes
+                .withCacheConfiguration("postsByPlaces", shortLivedConfig)   // 5 minutes
                 .transactionAware()
                 .build();
     }
