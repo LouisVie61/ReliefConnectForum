@@ -19,6 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,7 +30,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
 public class PostServiceImpl implements PostService {
 
     @Autowired
@@ -81,9 +82,24 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    @Transactional
     @CacheEvict(value = {"allPosts", "postsByPlace", "postsByPlaces"}, allEntries = true)
     public PostResponse create(PostRequest request) {
+        PostResponse response = createPost(request);
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        aiJobService.submitJob(response.getId());
+                    }
+                }
+        );
+
+        return response;
+    }
+
+    @Transactional
+    protected PostResponse createPost(PostRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
 
@@ -96,15 +112,10 @@ public class PostServiceImpl implements PostService {
         post.setContactPhone(request.getContactPhone());
         post.setTargetAmount(request.getTargetAmount());
         post.setCreatedAt(LocalDateTime.now());
+        post.setPostType(PostType.PENDING);
+
         Post savedPost = postRepository.save(post);
         postDocService.indexPost(savedPost);
-
-        boolean aiJobSubmitted = aiJobService.submitJob(savedPost.getId());
-        if (!aiJobSubmitted) {
-            savedPost.setPostType(PostType.UNKNOWN);
-        } else {
-            savedPost.setPostType(PostType.PENDING);
-        }
 
         return mapToResponse(savedPost);
     }
@@ -122,10 +133,6 @@ public class PostServiceImpl implements PostService {
 
         if (request.getContent() != null) {
             post.setContent(request.getContent());
-        }
-
-        if (request.getPostType() != null) {
-            post.setPostType(request.getPostType());
         }
 
         if (request.getLocation() != null) {
@@ -204,6 +211,7 @@ public class PostServiceImpl implements PostService {
         response.setLocation(post.getLocation());
         response.setUserId(post.getAuthor().getId());
         response.setUsername(post.getAuthor().getUsername());
+        response.setPostType(post.getPostType());
         response.setCreatedAt(post.getCreatedAt());
         response.setTotalDonations(totalDonations);
         return response;
