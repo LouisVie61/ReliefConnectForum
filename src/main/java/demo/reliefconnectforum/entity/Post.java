@@ -42,8 +42,8 @@ public class Post {
     private String content;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "post_type", nullable = false, length = 20)
-    private PostType postType;
+    @Column(name = "post_type", length = 20)
+    private PostType postType = PostType.PENDING;
 
     @Column(name = "location", length = 255)
     private String location;
@@ -64,6 +64,14 @@ public class Post {
     @Column(name = "created_at", updatable = false)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     @PrePersist
     public void prePersist() {

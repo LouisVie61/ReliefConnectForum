@@ -1,5 +1,6 @@
 package demo.reliefconnectforum.dto.response;
 
+import demo.reliefconnectforum.Enum.PostType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,7 @@ public class PostResponse {
     private String imageUrl;
     private UUID userId;
     private String username;
+    private PostType postType;
     private BigDecimal totalDonations;
     private LocalDateTime createdAt;
 }
