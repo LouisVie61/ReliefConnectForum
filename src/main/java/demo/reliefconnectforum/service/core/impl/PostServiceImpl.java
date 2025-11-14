@@ -12,9 +12,11 @@ import demo.reliefconnectforum.service.core.AdminService;
 import demo.reliefconnectforum.service.core.PostDocService;
 import demo.reliefconnectforum.service.core.PostService;
 import demo.reliefconnectforum.service.event.AIJobService;
+import demo.reliefconnectforum.service.event.PostCreatedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -50,6 +52,9 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private AIJobService aiJobService;
 
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
+
     @Override
     @Transactional(readOnly = true)
     // Batch fetch technique to avoid N+1 problem
@@ -82,18 +87,12 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     @CacheEvict(value = {"allPosts", "postsByPlace", "postsByPlaces"}, allEntries = true)
     public PostResponse create(PostRequest request) {
         PostResponse response = createPost(request);
 
-        TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        aiJobService.submitJob(response.getId());
-                    }
-                }
-        );
+        applicationEventPublisher.publishEvent(new PostCreatedEvent(response.getId()));
 
         return response;
     }
