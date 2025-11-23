@@ -75,8 +75,17 @@ public class RedisConfig {
                         .fromSerializer(jsonSerializer))
                 .prefixCacheNameWith("reliefconnect::");
 
+        RedisCacheConfiguration donationsCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(30))
+                .serializeKeysWith(org.springframework.data.redis.serializer.RedisSerializationContext.SerializationPair
+                        .fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(org.springframework.data.redis.serializer.RedisSerializationContext.SerializationPair
+                        .fromSerializer(jsonSerializer))
+                .prefixCacheNameWith("reliefconnect::");
+
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(cacheConfig)
+                .withCacheConfiguration("totalDonationsByPost", donationsCacheConfig)
                 .transactionAware()
                 .build();
     }

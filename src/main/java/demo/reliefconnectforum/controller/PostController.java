@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -73,14 +74,19 @@ public class PostController {
             @ApiResponse(responseCode = "400", description = "Invalid post data"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<PostResponse> create(
+    public ResponseEntity<?> create(
             @Parameter(description = "Post data for the new post")
             @RequestBody PostRequest request) {
         try {
+            PostResponse response = postService.create(request);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(postService.create(request));
-        } catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                    .body(Map.of(
+                            "post", response,
+                            "message", "Post created successfully. AI classification is processing in the background."
+                    ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to create post: " + e.getMessage()));
         }
     }
 
