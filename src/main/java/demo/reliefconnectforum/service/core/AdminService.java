@@ -19,4 +19,8 @@ public interface AdminService {
     Page<DonationResponse> findByLocation(String location, Pageable pageable);
     Page<DonationResponse> findByLocations(String[] locations, Pageable pageable);
     Page<DonationResponse> findByMinAmount(BigDecimal minAmount, Pageable pageable);
+
+    BigDecimal getTotalDonationsByPostIdNoCache(UUID postId);
+    Page<DonationResponse> findByLocationNoCache(String location, Pageable pageable);
+    Page<DonationResponse> findByLocationsNoCache(String[] locations, Pageable pageable);
 }

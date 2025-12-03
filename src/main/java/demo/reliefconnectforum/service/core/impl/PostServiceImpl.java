@@ -201,6 +201,45 @@ public class PostServiceImpl implements PostService {
         return posts.map(post -> mapToResponse(post, totalsMap.getOrDefault(post.getId(), BigDecimal.ZERO)));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponse> searchByTitleNoElasticsearch(String query, Pageable pageable) {
+        Page<Post> posts = postRepository.findByTitleContainingIgnoreCase(query, pageable);
+
+        List<UUID> postIds = posts.getContent().stream().map(Post::getId).toList();
+        List<Object[]> results = donationRepository.sumDonationsByPostIds(postIds);
+        Map<UUID, BigDecimal> totalsMap = results.stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> (BigDecimal) row[1]
+                ));
+
+        return posts.map(post -> mapToResponse(post, totalsMap.getOrDefault(post.getId(), BigDecimal.ZERO)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponse> searchByContentNoElasticsearch(String query, Pageable pageable) {
+        Page<Post> posts = postRepository.findByContentContainingIgnoreCase(query, pageable);
+
+        List<UUID> postIds = posts.getContent().stream().map(Post::getId).toList();
+        List<Object[]> results = donationRepository.sumDonationsByPostIds(postIds);
+        Map<UUID, BigDecimal> totalsMap = results.stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> (BigDecimal) row[1]
+                ));
+
+        return posts.map(post -> mapToResponse(post, totalsMap.getOrDefault(post.getId(), BigDecimal.ZERO)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponse> searchByLocationNoElasticsearch(String location, Pageable pageable) {
+        return findByPlace(location, pageable); // Already uses PostgreSQL
+    }
+
+
     // Overloaded version for batch operations (getAll, findByPlace, findByPlaces)
     private PostResponse mapToResponse(Post post, BigDecimal totalDonations) {
         PostResponse response = new PostResponse();

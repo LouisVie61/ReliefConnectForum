@@ -55,4 +55,14 @@ public interface DonationRepository extends JpaRepository<Donation, UUID> {
             "GROUP BY d.post_id",
             nativeQuery = true)
     List<Object[]> sumDonationsByPostIds(@Param("postIds") List<UUID> postIds);
+
+    // No Join Table Technique
+    @Query(value = "SELECT d.* FROM donations d WHERE d.location = :location", nativeQuery = true)
+    Page<Donation> findByLocationSimple(@Param("location") String location, Pageable pageable);
+
+    @Query(value = "SELECT d.* FROM donations d WHERE d.location IN (:locations)", nativeQuery = true)
+    Page<Donation> findByLocationsSimple(@Param("locations") String[] locations, Pageable pageable);
+
+    @Query(value = "SELECT d.* FROM donations d WHERE d.amount >= :amount", nativeQuery = true)
+    Page<Donation> findByMinAmountSimple(@Param("amount") BigDecimal amount, Pageable pageable);
 }

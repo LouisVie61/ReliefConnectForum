@@ -116,4 +116,58 @@ public class AdminController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    // API no-cache + join
+    @GetMapping("/donations/statistics/post/{postId}/nocache")
+    @Operation(summary = "Get total donations for a specific post (no-cache)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved total donations"),
+            @ApiResponse(responseCode = "400", description = "Invalid post ID supplied"),
+            @ApiResponse(responseCode = "404", description = "Post not found")
+    })
+    public ResponseEntity<BigDecimal> getTotalByPostNoCache(
+            @Parameter(description = "UUID of the post to retrieve total donations for", required = true)
+            @PathVariable UUID postId) {
+        try {
+            return ResponseEntity.ok(adminService.getTotalDonationsByPostIdNoCache(postId));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/donations/search/location/nocache")
+    @Operation(summary = "Find donations by location with pagination (no-cache)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved donations"),
+            @ApiResponse(responseCode = "400", description = "Invalid location parameter supplied")
+    })
+    public ResponseEntity<Page<DonationResponse>> findBylocationNoCache(
+            @Parameter(description = "location to filter donations by", required = true)
+            @RequestParam String location,
+            @Parameter(description = "Pagination information")
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
+        try {
+            return ResponseEntity.ok(adminService.findByLocationNoCache(location, pageable));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/donations/search/locations/nocache")
+    @Operation(summary = "Find donations by multiple locations with pagination (no-cache)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved donations"),
+            @ApiResponse(responseCode = "400", description = "Invalid locations parameter supplied")
+    })
+    public ResponseEntity<Page<DonationResponse>> findBylocationsNoCache(
+            @Parameter(description = "Array of locations to filter donations by", required = true)
+            @RequestParam String[] locations,
+            @Parameter(description = "Pagination information")
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
+        try {
+            return ResponseEntity.ok(adminService.findByLocationsNoCache(locations, pageable));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }

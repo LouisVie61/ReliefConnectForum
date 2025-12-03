@@ -174,4 +174,20 @@ public class PostController {
                     .body("This service is being disable at the moment. Please try again");
         }
     }
+
+    @GetMapping("/title/postgres")
+    @Operation(summary = "Search posts by title using PostgreSQL")
+    public ResponseEntity<Page<PostResponse>> searchTitlePostgres(
+            @RequestParam String query,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(postService.searchByTitleNoElasticsearch(query, pageable));
+    }
+
+    @GetMapping("/content/postgres")
+    @Operation(summary = "Search posts by content using PostgreSQL")
+    public ResponseEntity<Page<PostResponse>> searchContentPostgres(
+            @RequestParam String query,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(postService.searchByContentNoElasticsearch(query, pageable));
+    }
 }

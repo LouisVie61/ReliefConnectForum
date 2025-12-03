@@ -21,4 +21,9 @@ public interface PostService {
     // Advanced queries with join tables
     Page<PostResponse> findByPlace(String place, Pageable pageable);
     Page<PostResponse> findByPlaces(String[] places, Pageable pageable);
+
+    // Add these for PostgreSQL LIKE comparison
+    Page<PostResponse> searchByTitleNoElasticsearch(String query, Pageable pageable);
+    Page<PostResponse> searchByContentNoElasticsearch(String query, Pageable pageable);
+    Page<PostResponse> searchByLocationNoElasticsearch(String location, Pageable pageable);
 }

@@ -86,6 +86,40 @@ public class AdminServiceImpl implements AdminService {
                 .map(this::mapToResponse);
     }
 
+
+    // No-cache versions of the above methods
+    @Override
+    @Transactional(readOnly = true)
+    public BigDecimal getTotalDonationsByPostIdNoCache(UUID postId) {
+        if (!postRepository.existsById(postId)) {
+            throw new RuntimeException("Post not found with id: " + postId);
+        }
+        return donationRepository.sumDonationsByPostId(postId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<DonationResponse> findByLocationNoCache(String location, Pageable pageable) {
+        if (location == null || location.isEmpty()) {
+            throw new IllegalArgumentException("location must not be null or empty");
+        }
+
+        // Use simple query without LEFT JOIN
+        Page<Donation> donations = donationRepository.findByLocationSimple(location, pageable);
+        return donations.map(this::mapToResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<DonationResponse> findByLocationsNoCache(String[] locations, Pageable pageable) {
+        if (locations == null || locations.length == 0) {
+            throw new IllegalArgumentException("locations array must not be null or empty");
+        }
+
+        Page<Donation> donations = donationRepository.findByLocationsSimple(locations, pageable);
+        return donations.map(this::mapToResponse);
+    }
+
     private DonationResponse mapToResponse(Donation donation) {
         DonationResponse response = new DonationResponse();
         response.setId(donation.getId());

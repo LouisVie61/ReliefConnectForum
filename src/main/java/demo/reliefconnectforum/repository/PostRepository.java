@@ -37,4 +37,12 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     @Query("SELECT p FROM Post p WHERE p.updatedAt >= :threshold")
     List<Post> findRecentlyUpdated(@Param("threshold") LocalDateTime threshold);
+
+    // No Elasticsearch Technique
+    @Query("SELECT p FROM Post p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%'))")
+    Page<Post> findByTitleContainingIgnoreCase(@Param("query") String query, Pageable pageable);
+
+    @Query("SELECT p FROM Post p WHERE LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))")
+    Page<Post> findByContentContainingIgnoreCase(@Param("query") String query, Pageable pageable);
+
 }
