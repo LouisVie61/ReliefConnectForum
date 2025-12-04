@@ -68,7 +68,7 @@ public class PostController {
     }
 
     @PostMapping
-    @Operation(summary = "Create a new post")
+    @Operation(summary = "Create a new post with AI classification")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Post created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid post data"),
@@ -88,6 +88,15 @@ public class PostController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to create post: " + e.getMessage()));
         }
+    }
+
+    @PostMapping("/no-ai")
+    @Operation(summary = "Create a new post without AI classification")
+    public ResponseEntity<PostResponse> createNoAI(
+            @Parameter(description = "Post data for the new post")
+            @RequestBody PostRequest request) {
+        PostResponse response = postService.createNoAI(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")

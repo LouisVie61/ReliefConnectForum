@@ -22,6 +22,9 @@ public interface PostService {
     Page<PostResponse> findByPlace(String place, Pageable pageable);
     Page<PostResponse> findByPlaces(String[] places, Pageable pageable);
 
+    //PostCreate No AI
+    PostResponse createNoAI(PostRequest request);
+
     // Add these for PostgreSQL LIKE comparison
     Page<PostResponse> searchByTitleNoElasticsearch(String query, Pageable pageable);
     Page<PostResponse> searchByContentNoElasticsearch(String query, Pageable pageable);

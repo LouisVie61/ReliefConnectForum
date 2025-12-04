@@ -97,6 +97,12 @@ public class PostServiceImpl implements PostService {
         return response;
     }
 
+    @Override
+    @Transactional
+    public PostResponse createNoAI(PostRequest request) {
+        return createPost(request);
+    }
+
     @Transactional
     protected PostResponse createPost(PostRequest request) {
         User user = userRepository.findById(request.getUserId())
