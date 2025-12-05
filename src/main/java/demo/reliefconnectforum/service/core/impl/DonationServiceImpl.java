@@ -2,6 +2,7 @@ package demo.reliefconnectforum.service.core.impl;
 
 import demo.reliefconnectforum.dto.request.DonationRequest;
 import demo.reliefconnectforum.dto.response.DonationResponse;
+import demo.reliefconnectforum.dto.response.PageResponse;
 import demo.reliefconnectforum.entity.Donation;
 import demo.reliefconnectforum.repository.DonationRepository;
 import demo.reliefconnectforum.repository.PostRepository;
@@ -33,9 +34,10 @@ public class DonationServiceImpl implements DonationService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = "allDonations", key = "#pageable.pageNumber + '-' + #pageable.pageSize")
-    public Page<DonationResponse> getAll(Pageable pageable) {
-        return donationRepository.findAll(pageable)
+    public PageResponse<DonationResponse> getAll(Pageable pageable) {
+        Page<DonationResponse> page = donationRepository.findAll(pageable)
                 .map(this::mapToResponse);
+        return PageResponse.of(page);
     }
 
     @Override
