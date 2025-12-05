@@ -50,70 +50,70 @@ public class JWTTokenServiceImpl implements JWTTokenService {
         return script;
     }
 
-    @Override
-    public void storeToken(String userId, String token, long durationSeconds) {
-        if (userId == null || userId.isEmpty()) {
-            throw new IllegalArgumentException("userId must not be null or empty");
-        }
+//    @Override
+//    public void storeToken(String userId, String token, long durationSeconds) {
+//        if (userId == null || userId.isEmpty()) {
+//            throw new IllegalArgumentException("userId must not be null or empty");
+//        }
+//
+//        if (token == null || token.isEmpty()) {
+//            throw new IllegalArgumentException("token must not be null or empty");
+//        }
+//
+//        int maxSessions = properties.getMaxSessionsPerUser();
+//        if (maxSessions <= 0) {
+//            throw new IllegalStateException(
+//                    "jwt.redis.max-sessions-per-user must be > 0 (current: " + maxSessions + ")"
+//            );
+//        }
+//
+//        // Atomic session limit check (Lua script)
+//        List<Object> result = redisTemplate.execute(
+//                sessionLimitScript,
+//                Collections.singletonList(properties.getUserTokensPrefix() + userId),
+//                properties.getTokenPrefix(),
+//                properties.getReverseMapPrefix(),
+//                String.valueOf(properties.getMaxSessionsPerUser())
+//        );
+//
+//        // Step 2: Handle revocation if limit exceeded
+//        if (result != null && ((Number) result.get(0)).intValue() == 1) {
+//            String revokedToken = result.get(1).toString();
+//            log.warn("Session limit reached for user {}. Revoked oldest token: {}",
+//                    userId, revokedToken);
+//            eventPublisher.publishEvent(new TokenRevokedEvent(this, userId, revokedToken));
+//        }
+//
+//        // Define Redis keys
+//        String tokenKey = properties.getTokenPrefix() + token;
+//        String tokenUserKey = properties.getReverseMapPrefix() + token;
+//        String userTokensKey = properties.getUserTokensPrefix() + userId;
+//
+//        // Store token (transactional)
+//        redisTemplate.execute(new SessionCallback<Void>() {
+//            @Override
+//            public Void execute(RedisOperations operations) throws DataAccessException {
+//                operations.multi();
+//
+//                // Store token metadata
+//                operations.opsForHash().put(tokenKey, "userId", userId);
+//                operations.opsForHash().put(tokenKey, "issuedAt", System.currentTimeMillis());
+//                operations.expire(tokenKey, durationSeconds, TimeUnit.SECONDS);
+//
+//                // Store reverse mapping
+//                operations.opsForValue().set(tokenUserKey, userId, durationSeconds, TimeUnit.SECONDS);
+//
+//                // Add to user's token set
+//                operations.opsForSet().add(userTokensKey, token);
+//                operations.expire(userTokensKey, durationSeconds, TimeUnit.SECONDS);
+//
+//                operations.exec();
+//                return null;
+//            }
+//        });
 
-        if (token == null || token.isEmpty()) {
-            throw new IllegalArgumentException("token must not be null or empty");
-        }
-
-        int maxSessions = properties.getMaxSessionsPerUser();
-        if (maxSessions <= 0) {
-            throw new IllegalStateException(
-                    "jwt.redis.max-sessions-per-user must be > 0 (current: " + maxSessions + ")"
-            );
-        }
-
-        // Atomic session limit check (Lua script)
-        List<Object> result = redisTemplate.execute(
-                sessionLimitScript,
-                Collections.singletonList(properties.getUserTokensPrefix() + userId),
-                properties.getTokenPrefix(),
-                properties.getReverseMapPrefix(),
-                String.valueOf(properties.getMaxSessionsPerUser())
-        );
-
-        // Step 2: Handle revocation if limit exceeded
-        if (result != null && ((Number) result.get(0)).intValue() == 1) {
-            String revokedToken = result.get(1).toString();
-            log.warn("Session limit reached for user {}. Revoked oldest token: {}",
-                    userId, revokedToken);
-            eventPublisher.publishEvent(new TokenRevokedEvent(this, userId, revokedToken));
-        }
-
-        // Define Redis keys
-        String tokenKey = properties.getTokenPrefix() + token;
-        String tokenUserKey = properties.getReverseMapPrefix() + token;
-        String userTokensKey = properties.getUserTokensPrefix() + userId;
-
-        // Store token (transactional)
-        redisTemplate.execute(new SessionCallback<Void>() {
-            @Override
-            public Void execute(RedisOperations operations) throws DataAccessException {
-                operations.multi();
-
-                // Store token metadata
-                operations.opsForHash().put(tokenKey, "userId", userId);
-                operations.opsForHash().put(tokenKey, "issuedAt", System.currentTimeMillis());
-                operations.expire(tokenKey, durationSeconds, TimeUnit.SECONDS);
-
-                // Store reverse mapping
-                operations.opsForValue().set(tokenUserKey, userId, durationSeconds, TimeUnit.SECONDS);
-
-                // Add to user's token set
-                operations.opsForSet().add(userTokensKey, token);
-                operations.expire(userTokensKey, durationSeconds, TimeUnit.SECONDS);
-
-                operations.exec();
-                return null;
-            }
-        });
-
-        log.info("Stored token for user {} with TTL {}s", userId, durationSeconds);
-    }
+//        log.info("Stored token for user {} with TTL {}s", userId, durationSeconds);
+//    }
 
     /**
      *
@@ -132,6 +132,7 @@ public class JWTTokenServiceImpl implements JWTTokenService {
      * Switch back to dev profile
      * mvn spring-boot:run -Dspring-boot.run.profiles=dev
      *
+     * */
      @Override
      public void storeToken(String userId, String token, long durationSeconds) {
          if (userId == null || userId.isEmpty()) {
@@ -164,7 +165,7 @@ public class JWTTokenServiceImpl implements JWTTokenService {
 
         log.info("Stored token for user {} with TTL {}s (throttling disabled)", userId, durationSeconds);
     }
-     */
+
 
     @Override
     public boolean isTokenValid(String userId, String token) {
