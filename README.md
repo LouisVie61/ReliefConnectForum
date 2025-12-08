@@ -2,7 +2,7 @@
 
 Spring Boot application for disaster-relief coordination (rescue requests, fundraising, donations) with advanced session management, full-text search, OAuth2 authentication, and **AI-powered post classification**.
 
-Version 3 introduces **AI-Worker microservice** for intelligent post classification, Redis-based job queue, and microservice communication patterns.
+Version 3 introduces **AI-Worker Monolithic** for intelligent post classification, Redis-based job queue, and communication patterns.
 
 ---
 
