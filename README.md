@@ -1,4 +1,4 @@
-# Relief Connect Forum — Version 3 (Microservices with AI-Worker)
+# Relief Connect Forum — Version 3 (Monolithics with AI-Worker)
 
 Spring Boot application for disaster-relief coordination (rescue requests, fundraising, donations) with advanced session management, full-text search, OAuth2 authentication, and **AI-powered post classification**.
 
@@ -24,7 +24,7 @@ Version 3 introduces **AI-Worker Monolithic** for intelligent post classificatio
 - **Connection Pooling**: HikariCP (default)
 
 ### AI & Machine Learning
-- **AI-Worker**: Separate microservice (Python/Node.js)
+- **AI-Worker**: Separate Monolithic (Python/Node.js)
 - **Job Queue**: Redis List (`ai_jobs_queue`)
 - **Classification**: NLP-based post type detection (RESCUE, FUNDRAISE, UPDATE)
 - **Communication**: Asynchronous job processing
@@ -895,7 +895,7 @@ Response:
 
 ---
 
-### v3.0.0 (Future) - Microservices Evolution
+### v3.0.0 (Future) - Monolithics Evolution
 
 🎯 **Roadmap:**
 - **Message Queue**: RabbitMQ/Kafka for event streaming
@@ -937,7 +937,7 @@ Response:
 - **Development speed**: No network overhead between services
 - **Team size**: Suitable for small teams
 - **Easy debugging**: Single codebase
-- **Future-ready**: Layered architecture enables easy microservices split
+- **Future-ready**: Layered architecture enables easy Monolithics split
 
 ---
 
@@ -1213,10 +1213,10 @@ MIT License - See LICENSE file for details
 
 ---
 
-## AI-Worker Microservice
+## AI-Worker Monolithic
 
 ### Overview
-The AI-Worker is a separate microservice responsible for **intelligent post classification** using Natural Language Processing (NLP). It runs independently from the main Spring Boot application and communicates via Redis job queue.
+The AI-Worker is a separate Monolithic responsible for **intelligent post classification** using Natural Language Processing (NLP). It runs independently from the main Spring Boot application and communicates via Redis job queue.
 
 ### Architecture
 
