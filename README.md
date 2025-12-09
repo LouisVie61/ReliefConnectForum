@@ -75,12 +75,6 @@ Real-world performance metrics under concurrent load with JWT + Redis session ma
 - **Session Limit Working**: 2% rate limiting at peak (by design)
 - **Redis Efficiency**: 60% CPU at 350 RPS (room for growth)
 
-**Scalability Recommendations:**
-- Add Redis Cluster for >1000 concurrent users
-- Implement read replicas for PostgreSQL at >500 RPS
-- Consider horizontal scaling (multiple app instances) at >700 users
-- Enable connection pooling tuning for >400 RPS
-
 ---
 
 ## Architecture Overview
